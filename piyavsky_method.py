@@ -108,15 +108,15 @@ class PiyavskyMethod:
         plt.plot(x_smooth, y_smooth, 'b-', linewidth=2, label='Функция f(x)')
         
         # Ломаная Пиявского
-        plt.plot(x_polyline, y_polyline, 'r--', linewidth=1.5, label='Ломаная (нижняя оценка)')
+        plt.plot(x_polyline, y_polyline, 'r-', linewidth=1, label='Ломаная (нижняя оценка)')
         
         # Вычисленные точки
         plt.scatter(x_points, y_points, color='red', s=50, zorder=5, label='Вычисленные точки')
         
         # Лучшая точка (минимальная)
         best_point = min(self.points, key=lambda p: p[1])
-        plt.scatter([best_point[0]], [best_point[1]], color='green', s=100, zorder=6, 
-                   label=f'Лучшая точка: f({best_point[0]:.3f}) = {best_point[1]:.3f}')
+        plt.scatter([best_point[0]], [best_point[1]], color='green', s=100, zorder=5,
+                    label=f'Минимальная точка: f({best_point[0]:.3f}) = {best_point[1]:.3f}')
         
         # Настройки графика
         plt.xlabel('x')
