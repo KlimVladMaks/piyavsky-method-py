@@ -18,7 +18,7 @@ class PiyavskyMethod:
             eps: Точность вычислений (например, 0.01).
 
         Поддерживаемые операторы:
-            sin, cos, tan, exp, log, sqrt, pi, e
+            sin, cos, tan, exp, log, sqrt, pi
             (При необходимости может быть реализована поддержка дополнительных операторов)
         """
         # Сохраняем заданные параметры на уровне класса
@@ -129,13 +129,23 @@ class PiyavskyMethod:
                     label=f'Минимальная точка: f({best_point[0]:.3f}) = {best_point[1]:.3f}')
         
         # Настройки графика
+
         plt.xlabel('x', fontsize=12, fontweight='bold')
         plt.ylabel('f(x)', fontsize=12, fontweight='bold')
         plt.title(f'Метод Пиявского - График текущего состояния (итерация #{self.iteration_count})',
                   fontsize=14, fontweight='bold')
         plt.grid(True, alpha=0.2, linestyle='-', color='gray')
-        plt.axhline(y=0, color='black', linewidth=1.5, alpha=0.7, zorder=1)
-        plt.axvline(x=0, color='black', linewidth=1.5, alpha=0.7, zorder=1)
+
+        # Выделяем оси X и Y, но так, чтобы они не смещали форматирование графика
+        x_limits = plt.xlim()
+        y_limits = plt.ylim()
+        if x_limits[0] <= 0 <= x_limits[1]:
+            plt.axvline(x=0, color='black', linewidth=2, alpha=0.7, linestyle='-')
+        if y_limits[0] <= 0 <= y_limits[1]:
+            plt.axhline(y=0, color='black', linewidth=2, alpha=0.7, linestyle='-')
+        plt.xlim(x_limits)
+        plt.ylim(y_limits)
+
         plt.legend()
 
         # Отображаем график
@@ -218,7 +228,7 @@ class PiyavskyMethod:
         """
         # Преобразуем строку с функцией к читаемому для eval формату
         # (при необходимости можно добавить обработку дополнительных операторов)
-        func_expr = self.func_str
+        func_expr = self.func_str.strip()
         func_expr = func_expr.replace("f(x)=", "")
         func_expr = func_expr.replace("sin", "math.sin")
         func_expr = func_expr.replace("cos", "math.cos")
@@ -227,7 +237,6 @@ class PiyavskyMethod:
         func_expr = func_expr.replace("log", "math.log")
         func_expr = func_expr.replace("sqrt", "math.sqrt")
         func_expr = func_expr.replace("pi", "math.pi")
-        func_expr = func_expr.replace("e", "math.e")
 
         # Возвращаем лямбда-функцию
         return lambda x: eval(func_expr, {"math": math, "x": x})
