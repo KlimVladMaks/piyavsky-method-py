@@ -1,5 +1,6 @@
 import math
 import numpy as np
+import matplotlib.pyplot as plt
 
 
 class PiyavskyMethod:
@@ -64,6 +65,69 @@ class PiyavskyMethod:
 
         # Если зазор меньше заданной точности, то возвращаем True, если больше - False
         return gap < self.eps
+
+    def plot_current_state(self):
+        """
+        Визуализирует текущее состояние: функцию, вычисленные точки и ломаную.
+        """
+        # Создаём точки для гладкого отображения функции
+        x_smooth = np.linspace(self.x_start, self.x_end, 1000)
+        y_smooth = [self.func(x) for x in x_smooth]
+
+        # Разделяем сохранённые точки на X и Y
+        x_points = [p[0] for p in self.points]
+        y_points = [p[1] for p in self.points]
+
+        # Списки для координат, задающих ломаную (нижнюю огибающую)
+        x_polyline = []
+        y_polyline = []
+
+        # Перебираем все интервалы
+        for i in range(len(self.points) - 1):
+            x1, f1 = self.points[i]
+            x2, f2 = self.points[i + 1]
+
+            # Добавляем левую точку "зубца"
+            x_polyline.append(x1)
+            y_polyline.append(f1)
+
+            # Добавляем точку пересечения (вершину "зубца")
+            x_intersect = (f1 - f2 + self.L * (x1 + x2)) / (2 * self.L)
+            y_intersect = f1 - self.L * (x_intersect - x1)
+            x_polyline.append(x_intersect)
+            y_polyline.append(y_intersect)
+        
+        # Добавляем последнюю точку
+        x_polyline.append(self.points[-1][0])
+        y_polyline.append(self.points[-1][1])
+
+        # Создаём график
+        plt.figure(figsize=(12, 6))
+
+        # График исходной функции
+        plt.plot(x_smooth, y_smooth, 'b-', linewidth=2, label='Функция f(x)')
+        
+        # Ломаная Пиявского
+        plt.plot(x_polyline, y_polyline, 'r--', linewidth=1.5, label='Ломаная (нижняя оценка)')
+        
+        # Вычисленные точки
+        plt.scatter(x_points, y_points, color='red', s=50, zorder=5, label='Вычисленные точки')
+        
+        # Лучшая точка (минимальная)
+        best_point = min(self.points, key=lambda p: p[1])
+        plt.scatter([best_point[0]], [best_point[1]], color='green', s=100, zorder=6, 
+                   label=f'Лучшая точка: f({best_point[0]:.3f}) = {best_point[1]:.3f}')
+        
+        # Настройки графика
+        plt.xlabel('x')
+        plt.ylabel('f(x)')
+        plt.title('Метод Пиявского - текущее состояние')
+        plt.grid(True, alpha=0.3)
+        plt.legend()
+
+        # Отображаем график
+        plt.tight_layout()
+        plt.show()
 
     def _find_next_point(self) -> tuple[float, float]:
         """
