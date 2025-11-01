@@ -44,7 +44,11 @@ class PiyavskyMethod:
         # (чтобы не рассчитывать их повторно)
         self.intersect_cache = {}
 
-    def piyavsky_step(self) -> bool:
+        # Число итераций для достижения решения с заданной точностью.
+        # Данное значение доступно лишь после полного решения задачи (до этого равно None)
+        self.iteration_count = None
+
+    def step(self) -> bool:
         """
         Делает один шаг по методу Пиявского.
 
@@ -70,9 +74,9 @@ class PiyavskyMethod:
         # Если зазор меньше заданной точности, то возвращаем True, если больше - False
         return gap < self.eps
 
-    def plot_current_state(self):
+    def plot(self) -> None:
         """
-        Визуализирует текущее состояние: функцию, вычисленные точки и ломаную.
+        Визуализирует текущее состояние решения: функцию, вычисленные точки и ломаную.
         """
         # Создаём точки для гладкого отображения функции
         x_smooth = np.linspace(self.x_start, self.x_end, 1000)
@@ -118,19 +122,45 @@ class PiyavskyMethod:
         
         # Лучшая точка (минимальная)
         best_point = min(self.points, key=lambda p: p[1])
-        plt.scatter([best_point[0]], [best_point[1]], color='green', s=100, zorder=5,
+        plt.scatter([best_point[0]], [best_point[1]], color='green', s=100, zorder=10,
                     label=f'Минимальная точка: f({best_point[0]:.3f}) = {best_point[1]:.3f}')
         
         # Настройки графика
         plt.xlabel('x')
         plt.ylabel('f(x)')
-        plt.title('Метод Пиявского - текущее состояние')
+        plt.title('Метод Пиявского - График текущего состояния')
         plt.grid(True, alpha=0.3)
         plt.legend()
 
         # Отображаем график
         plt.tight_layout()
         plt.show()
+
+    def solve(self) -> tuple[float, float]:
+        """
+        Метод для решения задачи нахождения минимума функции с помощью метода Пиявского.
+        Возвращает координаты найденной минимальной точки: (x_min, f(x_min))
+        """
+        # Число итераций
+        iteration = 0
+
+        # Максимальное число итераций
+        # (защита от бесконечного цикла)
+        max_iterations = 1000
+
+        # Делаем шаги по методу Пиявского, пока не будет достигнута заданная точность
+        while iteration < max_iterations:
+            iteration += 1
+            is_sufficient_accuracy = self.step()
+            if is_sufficient_accuracy:
+                break
+        
+        # Сохраняем число итераций
+        self.iteration_count = iteration
+        
+        # Находим и возвращаем минимальную точку
+        min_point = min(self.points, key=lambda p: p[1])
+        return min_point
 
     def _find_next_point(self) -> tuple[float, float]:
         """
