@@ -7,7 +7,7 @@ class PiyavskyMethod:
     """
     Класс для нахождения минимума липшицевой функции с помощью метода Пиявского (ломанных).
     """
-    def __init__(self, func: str, x_start: float, x_end: float, eps: float) -> None:
+    def __init__(self, func: str, x_start: float, x_end: float, eps=0.01) -> None:
         """
         Метод для инициализации класса. Принимает условия задачи и осуществляет первичную обработку.
 
@@ -16,10 +16,6 @@ class PiyavskyMethod:
             x_start: Координата X начала рассматриваемого отрезка.
             x_end: Координата X конца рассматриваемого отрезка.
             eps: Точность вычислений (например, 0.01).
-
-        Поддерживаемые операторы:
-            sin, cos, tan, exp, log, sqrt, pi
-            (При необходимости может быть реализована поддержка дополнительных операторов)
         """
         # Сохраняем заданные параметры на уровне класса
         self.func_str = func
@@ -227,16 +223,8 @@ class PiyavskyMethod:
         Метод для получения программного представления заданной функции.
         """
         # Преобразуем строку с функцией к читаемому для eval формату
-        # (при необходимости можно добавить обработку дополнительных операторов)
         func_expr = self.func_str.strip()
         func_expr = func_expr.replace("f(x)=", "")
-        func_expr = func_expr.replace("sin", "math.sin")
-        func_expr = func_expr.replace("cos", "math.cos")
-        func_expr = func_expr.replace("tan", "math.tan")
-        func_expr = func_expr.replace("exp", "math.exp")
-        func_expr = func_expr.replace("log", "math.log")
-        func_expr = func_expr.replace("sqrt", "math.sqrt")
-        func_expr = func_expr.replace("pi", "math.pi")
 
         # Возвращаем лямбда-функцию
         return lambda x: eval(func_expr, {"math": math, "x": x})
