@@ -46,7 +46,7 @@ class PiyavskyMethod:
 
         # Число итераций для достижения решения с заданной точностью.
         # Данное значение доступно лишь после полного решения задачи (до этого равно None)
-        self.iteration_count = None
+        self.iteration_count = 0
 
     def step(self) -> bool:
         """
@@ -55,6 +55,9 @@ class PiyavskyMethod:
         Returns:
             True если достигнута заданная точность, False если ещё нет.
         """
+        # Увеличиваем счётчик итераций
+        self.iteration_count += 1
+
         # Находим следующую точку для исследования
         x_new, lower_bound = self._find_next_point()
 
@@ -109,7 +112,7 @@ class PiyavskyMethod:
         y_polyline.append(self.points[-1][1])
 
         # Создаём график
-        plt.figure(figsize=(12, 6))
+        plt.figure(figsize=(12, 7))
 
         # График исходной функции
         plt.plot(x_smooth, y_smooth, 'b-', linewidth=2, label='Функция f(x)')
@@ -118,7 +121,7 @@ class PiyavskyMethod:
         plt.plot(x_polyline, y_polyline, 'r-', linewidth=1, label='Ломаная (нижняя оценка)')
         
         # Вычисленные точки
-        plt.scatter(x_points, y_points, color='red', s=50, zorder=5, label='Вычисленные точки')
+        plt.scatter(x_points, y_points, color='red', s=20, zorder=5, label='Вычисленные точки')
         
         # Лучшая точка (минимальная)
         best_point = min(self.points, key=lambda p: p[1])
@@ -126,37 +129,32 @@ class PiyavskyMethod:
                     label=f'Минимальная точка: f({best_point[0]:.3f}) = {best_point[1]:.3f}')
         
         # Настройки графика
-        plt.xlabel('x')
-        plt.ylabel('f(x)')
-        plt.title('Метод Пиявского - График текущего состояния')
-        plt.grid(True, alpha=0.3)
+        plt.xlabel('x', fontsize=12, fontweight='bold')
+        plt.ylabel('f(x)', fontsize=12, fontweight='bold')
+        plt.title(f'Метод Пиявского - График текущего состояния (итерация #{self.iteration_count})',
+                  fontsize=14, fontweight='bold')
+        plt.grid(True, alpha=0.2, linestyle='-', color='gray')
+        plt.axhline(y=0, color='black', linewidth=1.5, alpha=0.7, zorder=1)
+        plt.axvline(x=0, color='black', linewidth=1.5, alpha=0.7, zorder=1)
         plt.legend()
 
         # Отображаем график
         plt.tight_layout()
         plt.show()
 
-    def solve(self) -> tuple[float, float]:
+    def solve(self, max_iterations=10000) -> tuple[float, float]:
         """
         Метод для решения задачи нахождения минимума функции с помощью метода Пиявского.
-        Возвращает координаты найденной минимальной точки: (x_min, f(x_min))
+        Возвращает координаты найденной минимальной точки: (x_min, f(x_min)).
+        Аргументы:
+            max_iterations: Максимальное число итераций (защита от бесконечного цикла).
         """
-        # Число итераций
-        iteration = 0
-
-        # Максимальное число итераций
-        # (защита от бесконечного цикла)
-        max_iterations = 1000
-
         # Делаем шаги по методу Пиявского, пока не будет достигнута заданная точность
-        while iteration < max_iterations:
-            iteration += 1
+        # или превышено максимальное число итераций
+        for _ in range(max_iterations):
             is_sufficient_accuracy = self.step()
             if is_sufficient_accuracy:
                 break
-        
-        # Сохраняем число итераций
-        self.iteration_count = iteration
         
         # Находим и возвращаем минимальную точку
         min_point = min(self.points, key=lambda p: p[1])
