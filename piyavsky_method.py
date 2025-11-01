@@ -40,6 +40,10 @@ class PiyavskyMethod:
             (self.x_end, self.func(self.x_end))
         ]
 
+        # Словарь для хранения кэша с точками пересечения
+        # (чтобы не рассчитывать их повторно)
+        self.intersect_cache = {}
+
     def piyavsky_step(self) -> bool:
         """
         Делает один шаг по методу Пиявского.
@@ -92,8 +96,7 @@ class PiyavskyMethod:
             y_polyline.append(f1)
 
             # Добавляем точку пересечения (вершину "зубца")
-            x_intersect = (f1 - f2 + self.L * (x1 + x2)) / (2 * self.L)
-            y_intersect = f1 - self.L * (x_intersect - x1)
+            x_intersect, y_intersect = self._get_intersect_coord(x1, f1, x2, f2)
             x_polyline.append(x_intersect)
             y_polyline.append(y_intersect)
         
@@ -139,33 +142,46 @@ class PiyavskyMethod:
         best_x = None
         best_lower_bound = float('inf')
 
+        # Начало и конец интервала, содержащего лучшую точку
+        # (используется для удаления лишнего кэша)
+        best_interval_x1 = None
+        best_interval_x2 = None
+
         # Проверяем все интервалы между соседними точками
         for i in range(len(self.points) - 1):
             x1, f1 = self.points[i]
             x2, f2 = self.points[i + 1]
 
             # Вычисляем координаты точки пересечения
-            x_intersect = (f1 - f2 + self.L * (x1 + x2)) / (2 * self.L)
-            y_intersect = f1 - self.L * (x_intersect - x1)
+            x_intersect, y_intersect = self._get_intersect_coord(x1, f1, x2, f2)
 
-            # При необходимости обновляем значение нижней границы
+            # При необходимости кэшируем координаты точки пересечения
+            if (x1, x2) not in self.intersect_cache:
+                self.intersect_cache[(x1, x2)] = (x_intersect, y_intersect)
+
+            # При необходимости обновляем лучшие значения
             if y_intersect < best_lower_bound:
                 best_lower_bound = y_intersect
                 best_x = x_intersect
+                best_interval_x1 = x1
+                best_interval_x2 = x2
+        
+        # Так как этот интервал будет разделён, то удаляем его из кэша
+        del self.intersect_cache[(best_interval_x1, best_interval_x2)]
         
         # Возвращаем полученные значения
         return best_x, best_lower_bound
 
-    def _get_intersect_coord(self, x_1: int, x_2: int) -> tuple[int]:
+    def _get_intersect_coord(self, x1: float, f1: float, x2: float, f2: float) -> tuple[float, float]:
         """
-        Возвращает координаты X и Y точки пересечения двух прямых с наклонами -L и L,
-        проходящих через две заданные точки на графике функции с координатами x_1 и x_2.
-        Для корректной работы обязательно, чтобы x_1 была меньше x_2.
+        Возвращает точку пересечения двух прямых с наклоном -L и L для двух заданных точек.
+        При возможности использует кэш для избежания лишних вычислений, но сам значения не кэширует.
+        Для корректной работы требуется, чтобы первая точка была правее второй.
         """
-        f_1 = self.func(x_1)
-        f_2 = self.func(x_2)
-        x_intersect = ((f_1 - f_2) / (2 * self.L)) + ((x_1 + x_2) / 2)
-        y_intersect = f_1 - self.L * (x_intersect - x_1)
+        if (x1, x2) in self.intersect_cache:
+            return self.intersect_cache[(x1, x2)]
+        x_intersect = ((f1 - f2) / (2 * self.L)) + ((x1 + x2) / 2)
+        y_intersect = f1 - self.L * (x_intersect - x1)
         return x_intersect, y_intersect
     
     def _create_func(self):
