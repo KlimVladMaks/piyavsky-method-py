@@ -73,63 +73,72 @@ class PiyavskyMethod:
         # Если зазор меньше заданной точности, то возвращаем True, если больше - False
         return gap < self.eps
 
-    def plot(self) -> None:
+    def plot(self, show_solution=True) -> None:
         """
         Визуализирует текущее состояние решения: функцию, вычисленные точки и ломаную.
+        Если `show_solution=False`, то визуализируется только график заданной функции.
         """
         # Создаём точки для гладкого отображения функции
         x_smooth = np.linspace(self.x_start, self.x_end, 1000)
         y_smooth = [self.func(x) for x in x_smooth]
 
-        # Разделяем сохранённые точки на X и Y
-        x_points = [p[0] for p in self.points]
-        y_points = [p[1] for p in self.points]
+        # Если стоим не только функцию
+        if show_solution:
+            # Разделяем сохранённые точки на X и Y
+            x_points = [p[0] for p in self.points]
+            y_points = [p[1] for p in self.points]
 
-        # Списки для координат, задающих ломаную (нижнюю огибающую)
-        x_polyline = []
-        y_polyline = []
+            # Списки для координат, задающих ломаную (нижнюю огибающую)
+            x_polyline = []
+            y_polyline = []
 
-        # Перебираем все интервалы
-        for i in range(len(self.points) - 1):
-            x1, f1 = self.points[i]
-            x2, f2 = self.points[i + 1]
+            # Перебираем все интервалы
+            for i in range(len(self.points) - 1):
+                x1, f1 = self.points[i]
+                x2, f2 = self.points[i + 1]
 
-            # Добавляем левую точку "зубца"
-            x_polyline.append(x1)
-            y_polyline.append(f1)
+                # Добавляем левую точку "зубца"
+                x_polyline.append(x1)
+                y_polyline.append(f1)
 
-            # Добавляем точку пересечения (вершину "зубца")
-            x_intersect, y_intersect = self._get_intersect_coord(x1, f1, x2, f2)
-            x_polyline.append(x_intersect)
-            y_polyline.append(y_intersect)
-        
-        # Добавляем последнюю точку
-        x_polyline.append(self.points[-1][0])
-        y_polyline.append(self.points[-1][1])
+                # Добавляем точку пересечения (вершину "зубца")
+                x_intersect, y_intersect = self._get_intersect_coord(x1, f1, x2, f2)
+                x_polyline.append(x_intersect)
+                y_polyline.append(y_intersect)
+            
+            # Добавляем последнюю точку
+            x_polyline.append(self.points[-1][0])
+            y_polyline.append(self.points[-1][1])
 
         # Создаём график
         plt.figure(figsize=(12, 7))
 
         # График исходной функции
-        plt.plot(x_smooth, y_smooth, 'b-', linewidth=2, label='Функция f(x)')
+        plt.plot(x_smooth, y_smooth, 'b-', linewidth=2, zorder=5, label='Функция f(x)')
         
-        # Ломаная Пиявского
-        plt.plot(x_polyline, y_polyline, 'r-', linewidth=1, label='Ломаная (нижняя оценка)')
-        
-        # Вычисленные точки
-        plt.scatter(x_points, y_points, color='red', s=20, zorder=5, label='Вычисленные точки')
-        
-        # Лучшая точка (минимальная)
-        best_point = min(self.points, key=lambda p: p[1])
-        plt.scatter([best_point[0]], [best_point[1]], color='green', s=100, zorder=10,
-                    label=f'Минимальная точка: f({best_point[0]:.3f}) = {best_point[1]:.3f}')
+        if show_solution:
+            # Ломаная Пиявского
+            plt.plot(x_polyline, y_polyline, 'r-', linewidth=1, zorder=10, label='Ломаная (нижняя оценка)')
+            
+            # Вычисленные точки
+            plt.scatter(x_points, y_points, color='red', s=20, zorder=15, label='Вычисленные точки')
+            
+            # Лучшая точка (минимальная)
+            best_point = min(self.points, key=lambda p: p[1])
+            plt.scatter([best_point[0]], [best_point[1]], color='green', s=100, zorder=15,
+                        label=f'Минимальная точка: f({best_point[0]:.3f}) = {best_point[1]:.3f}')
         
         # Настройки графика
 
         plt.xlabel('x', fontsize=12, fontweight='bold')
         plt.ylabel('f(x)', fontsize=12, fontweight='bold')
-        plt.title(f'Метод Пиявского - График текущего состояния (итерация #{self.iteration_count})',
-                  fontsize=14, fontweight='bold')
+
+        if show_solution:
+            plt.title(f'Метод Пиявского - График текущего состояния (итерация #{self.iteration_count})',
+                    fontsize=14, fontweight='bold')
+        else:
+            plt.title('График заданной функции', fontsize=14, fontweight='bold')
+        
         plt.grid(True, alpha=0.2, linestyle='-', color='gray')
 
         # Выделяем оси X и Y, но так, чтобы они не смещали форматирование графика
